@@ -1,23 +1,17 @@
 package com.zzkoro.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.jdbc.DataSourceBuilder;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
-import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerEndpointsConfiguration;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
 import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
 import org.springframework.security.oauth2.provider.approval.ApprovalStore;
-import org.springframework.security.oauth2.provider.approval.JdbcApprovalStore;
 import org.springframework.security.oauth2.provider.client.JdbcClientDetailsService;
 import org.springframework.security.oauth2.provider.code.AuthorizationCodeServices;
-import org.springframework.security.oauth2.provider.code.JdbcAuthorizationCodeServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JdbcTokenStore;
+import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 
 import javax.sql.DataSource;
 
@@ -28,56 +22,45 @@ import javax.sql.DataSource;
 @EnableAuthorizationServer
 public class AuthorizationServerConfig extends AuthorizationServerConfigurerAdapter {
 
-    static final String CLIENT_ID = "client-id";
-    static final String CLIENT_SECRET = "$2a$04$HVpM5fTyvkcTclqickeJ6e5f7ZZfmRLlejt2B3Tr27vIPilNsNb8y"; //client-secret
-    static final String GRANT_TYPE_PASSWORD = "password";
-    static final String AUTHORIZATION_CODE = "authorization_code";
-    static final String REFRESH_TOKEN = "refresh_token";
-    static final String IMPLICIT = "implicit";
-    static final String SCOPE_READ = "read";
-    static final String SCOPE_WRITE = "write";
-    static final String TRUST = "trust";
-    static final int ACCESS_TOKEN_VALIDITY_SECONDS = 1*60*60;
-    static final int REFRESH_TOKEN_VALIDITY_SECONDS = 6*60*60;
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
-    @Bean
-    @ConfigurationProperties(prefix = "spring.datasource")
-    public DataSource oauthDataSource() {
-        return DataSourceBuilder.create().build();
-    }
+    @Autowired
+    private DataSource oauthDataSource;
 
-    @Bean
-    public JdbcClientDetailsService clientDetailsService() {
-        return new JdbcClientDetailsService(oauthDataSource());
-    }
+    @Autowired
+    private JdbcClientDetailsService clientDetailsService;
 
-    @Bean
-    public TokenStore tokenStore() {
-        return new JdbcTokenStore(oauthDataSource());
-    }
+    @Autowired
+    private JwtAccessTokenConverter accessTokenConverter;
 
-    @Bean
-    public ApprovalStore approvalStore() {
-        return new JdbcApprovalStore(oauthDataSource());
-    }
+    @Autowired
+    public TokenStore tokenStore;
 
-    @Bean
-    public AuthorizationCodeServices authorizationCodeServices() {
-        return new JdbcAuthorizationCodeServices(oauthDataSource());
-    }
+    @Autowired
+    public ApprovalStore approvalStore;
+
+    @Autowired
+    public AuthorizationCodeServices authorizationCodeServices;
+
+
 
 
     @Override
     public void configure(ClientDetailsServiceConfigurer configurer) throws Exception {
-        configurer.withClientDetails(clientDetailsService());
+        configurer.withClientDetails(clientDetailsService);
     }
 
     @Override
     public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         endpoints
-                .approvalStore(approvalStore())
-                .authorizationCodeServices(authorizationCodeServices())
-                .tokenStore(tokenStore());
+                .approvalStore(approvalStore)
+                .authorizationCodeServices(authorizationCodeServices)
+                .tokenStore(tokenStore)
+                .accessTokenConverter(accessTokenConverter)
+                .authenticationManager(authenticationManager);
+        ;
+
     }
 
 }
