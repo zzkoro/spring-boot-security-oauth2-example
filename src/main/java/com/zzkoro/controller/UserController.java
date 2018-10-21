@@ -3,6 +3,7 @@ package com.zzkoro.controller;
 import com.zzkoro.model.User;
 import com.zzkoro.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class UserController {
     private UserService userService;
 
     @RequestMapping(value="/user", method = RequestMethod.GET)
+    @PreAuthorize("hasRole('ROLE_PRODUCT_ADMIN')")
     public List<User> listUser() {
         return userService.findAll();
     }
